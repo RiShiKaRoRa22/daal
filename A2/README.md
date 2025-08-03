@@ -1,0 +1,1 @@
+Quick and merge sort implementation in c++, using file operations to first take input user, write them to a txt file(tab separated values),then fetch those file values and apply sorting. menu driven program, also displays first 5 pass results.
