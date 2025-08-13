@@ -1,139 +1,190 @@
-import java.io.File;
 import java.util.*;
+import java.io.*;
 
+public class Main{
+    static int[][] graph;
+    static int V;
 
-public class PrimsMST {
-    public static void primMST(int[][] graph) {
-        int V = graph.length;
-        boolean[] visited = new boolean[V];
-        int[] key = new int[V];         
-        int[] parent = new int[V];      
-
-        Arrays.fill(key, Integer.MAX_VALUE);
-        key[0] = 0;   
-        parent[0] = -1;
-
-        for (int count = 0; count < V - 1; count++) {
-            int u = minKey(key, visited);
-            visited[u] = true;
-
-            for (int v = 0; v < V; v++) {
-                if (graph[u][v] != 0 && !visited[v] && graph[u][v] < key[v]) {
-                    parent[v] = u;
-                    key[v] = graph[u][v];
+    public static void main(String[] args) throws FileNotFoundException {
+        Scanner fileScanner = new Scanner(new File("graph.txt"));
+        V = fileScanner.nextInt();
+        graph = new int[V][V];
+        for (int i = 0; i < V; i++) {
+            for (int j = 0; j < V; j++) {
+                graph[i][j] = fileScanner.nextInt();
+                if (graph[i][j] == 0 && i != j) {
+                    graph[i][j] = 9999;
                 }
             }
         }
+        fileScanner.close();
 
-        System.out.println("Edge \tWeight");
-        for (int i = 1; i < V; i++)
-            System.out.println(parent[i] + " - " + i + "\t" + graph[i][parent[i]]);
-    }
+        Scanner sc = new Scanner(System.in);
+        while (true) {
+            System.out.println("\nMenu:");
+            System.out.println("1. Prim's Algorithm");
+            System.out.println("2. Kruskal's Algorithm");
+            System.out.println("3. Exit");
+            System.out.print("Choose (1-3): ");
 
-    private static int minKey(int[] key, boolean[] visited) {
-        int min = Integer.MAX_VALUE, minIndex = -1;
-        for (int v = 0; v < key.length; v++) {
-            if (!visited[v] && key[v] < min) {
-                min = key[v];
-                minIndex = v;
+            int choice = sc.nextInt();
+            System.out.println();
+
+            switch (choice) {
+                case 1:
+                    System.out.println("Prim's Algorithm:");
+                    primMST();
+                    break;
+
+                case 2:
+                    System.out.println("Kruskal's Algorithm:");
+                    kruskalMST();
+                    break;
+
+                case 3:
+                    System.out.println("Exiting.");
+                    sc.close();
+                    return;
+
+                default:
+                    System.out.println("Choose 1-3.");
             }
         }
-        return minIndex;
-    }
-}
-
-
-
-class Edge implements Comparable<Edge> {
-    int src, dest, weight;
-    public Edge(int s, int d, int w) {
-        src = s;
-        dest = d;
-        weight = w;
     }
 
-    public int compareTo(Edge other) {
-        return this.weight - other.weight;
-    }
-}
-
-class DisjointSet {
-    int[] parent;
-
-    public DisjointSet(int n) {
-        parent = new int[n];
-        for (int i = 0; i < n; i++)
-            parent[i] = i;
-    }
-
-    public int find(int u) {
-        if (parent[u] != u)
-            parent[u] = find(parent[u]);
-        return parent[u];
-    }
-
-    public void union(int u, int v) {
-        int uRoot = find(u);
-        int vRoot = find(v);
-        parent[uRoot] = vRoot;
-    }
-}
-
-public class KruskalsMST {
-    public static void kruskalMST(int[][] adjMatrix) {
-        int V = adjMatrix.length;
-        List<Edge> edges = new ArrayList<>();
-
+    static void primMST() {
+        int[] parent = new int[V];
+        int[] cost = new int[V];
+        boolean[] inMST = new boolean[V];
 
         for (int i = 0; i < V; i++) {
-            for (int j = i + 1; j < V; j++) {
-                if (adjMatrix[i][j] != 0) {
-                    edges.add(new Edge(i, j, adjMatrix[i][j]));
+            cost[i] = 9999;
+        }
+        cost[0] = 0;
+        parent[0] = -1;
+
+        int totalCost = 0;
+        int edgeComparisons = 0;
+
+        for (int count = 0; count < V; count++) {
+            int minCost = 9999;
+            int u = -1;
+            for (int v = 0; v < V; v++) {
+                if (!inMST[v] && cost[v] < minCost) {
+                    minCost = cost[v];
+                    u = v;
+                }
+            }
+
+            if (u == -1) {
+                System.out.println("Graph is disconnected.");
+                return;
+            }
+
+            inMST[u] = true;
+            totalCost += cost[u];
+
+            System.out.println("Stage " + (count + 1) + ": Node " + u +
+                               " (from " + (parent[u] == -1 ? "none" : parent[u]) +
+                               ", cost " + cost[u] + "), Total cost: " + totalCost);
+
+            for (int v = 0; v < V; v++) {
+                if (graph[u][v] != 9999 && !inMST[v]) {
+                    edgeComparisons++;
+                    if (graph[u][v] < cost[v]) {
+                        cost[v] = graph[u][v];
+                        parent[v] = u;
+                    }
                 }
             }
         }
-        Collections.sort(edges);
 
-        DisjointSet ds = new DisjointSet(V);
+        System.out.println("Total MCST cost: " + totalCost);
+        System.out.println("Edge comparisons: " + edgeComparisons);
+    }
 
-        System.out.println("Edge \tWeight");
+    static class Edge {
+        int u, v, weight;
+
+        Edge(int u, int v, int weight) {
+            this.u = u;
+            this.v = v;
+            this.weight = weight;
+        }
+    }
+
+    static int find(int[] parent, int i) {
+        if (parent[i] != i) {
+            parent[i] = find(parent, parent[i]);
+        }
+        return parent[i];
+    }
+
+    static void union(int[] parent, int[] rank, int x, int y) {
+        int xroot = find(parent, x);
+        int yroot = find(parent, y);
+
+        if (rank[xroot] < rank[yroot]) {
+            parent[xroot] = yroot;
+        } else if (rank[xroot] > rank[yroot]) {
+            parent[yroot] = xroot;
+        } else {
+            parent[yroot] = xroot;
+            rank[xroot]++;
+        }
+    }
+
+    static void kruskalMST() {
+        List<Edge> edges = new ArrayList<>();
+        for (int i = 0; i < V; i++) {
+            for (int j = i + 1; j < V; j++) {
+                if (graph[i][j] != 9999) {
+                    edges.add(new Edge(i, j, graph[i][j]));
+                }
+            }
+        }
+
+        Collections.sort(edges, new Comparator<Edge>() {
+            public int compare(Edge e1, Edge e2) {
+                return e1.weight - e2.weight;
+            }
+        });
+
+        int[] parent = new int[V];
+        int[] rank = new int[V];
+        for (int i = 0; i < V; i++) {
+            parent[i] = i;
+            rank[i] = 0;
+        }
+
+        int totalCost = 0;
+        int edgesUsed = 0;
+        int stage = 1;
 
         for (Edge edge : edges) {
-            int uRoot = ds.find(edge.src);
-            int vRoot = ds.find(edge.dest);
+            int x = find(parent, edge.u);
+            int y = find(parent, edge.v);
 
-            if (uRoot != vRoot) {
-                System.out.println(edge.src + " - " + edge.dest + "\t" + edge.weight);
-                ds.union(uRoot, vRoot);
+            if (x != y) {
+                union(parent, rank, x, y);
+                totalCost += edge.weight;
+
+                System.out.println("Stage " + stage + ": Edge " + edge.u + "-" + edge.v +
+                                   ", cost " + edge.weight + ", Total cost: " + totalCost);
+                stage++;
+                edgesUsed++;
+
+                if (edgesUsed == V - 1) {
+                    break;
+                }
             }
         }
-    }
-}
 
-
-
-class Solution{
-    public static void main(String args[]){
-        File fileobj= new File("graph.txt");
-        Scanner sc= new Scanner(fileobj);
-        List<int[]> matrix= new ArrayList<>();
-        
-        
-        while(sc.hasNextLine()){
-            String line=sc.nextline();
-            String[] tokens= line.split("\\s+");
-            int[] row= new int[tokens.length];
-            int i=0;
-            for(String s: tokens){
-                row[i]=Integer.parseInt(s);
-                i++;
-            }
-            matrix.add(row);
-            
-            int[][] adjmat= matrix.toArray(new int[0][]);
+        if (edgesUsed < V - 1) {
+            System.out.println("Graph is disconnected.");
+            return;
         }
-        
-        
+
+        System.out.println("Total MCST cost: " + totalCost);
     }
 }
-    
