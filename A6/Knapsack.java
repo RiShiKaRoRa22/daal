@@ -27,13 +27,13 @@ class KnapsackSimple {
         }
 
        
-        int w = capacity;
+        int j = capacity;
         boolean[] chosen = new boolean[n]; 
 
         for (int i = n; i > 0; i--) {
-            if (dp[i][w] != dp[i - 1][w]) { 
+            if (dp[i][j] != dp[i - 1][j]) { 
                 chosen[i - 1] = true;
-                w -= weights[i - 1];
+                j = j- weights[i - 1];
             }
         }
 
