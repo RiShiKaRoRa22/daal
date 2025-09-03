@@ -12,15 +12,15 @@ class KnapsackSimple {
 
 
         for (int i = 1; i <= n; i++) {
-            for (int w = 0; w <= capacity; w++) {
+            for (int j = 0; j <= capacity; j++) {
             
-                dp[i][w] = dp[i - 1][w];
+                dp[i][j] = dp[i - 1][j];
 
             
-                if (weights[i - 1] <= w) {
-                    int val = dp[i - 1][w - weights[i - 1]] + values[i - 1];
-                    if (val > dp[i][w]) {
-                        dp[i][w] = val;
+                if (weights[i - 1] <= j) {
+                    int val = dp[i - 1][j - weights[i - 1]] + values[i - 1];
+                    if (val > dp[i][j]) {
+                        dp[i][j] = val;
                     }
                 }
             }
